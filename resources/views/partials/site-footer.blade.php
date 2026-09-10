@@ -1,0 +1,20 @@
+@php
+    $privateMode = $privateMode ?? false;
+    $socialLinks = $socialLinks ?? (App\Models\SiteSetting::query()->where('key', 'social')->value('value')['links'] ?? []);
+    $newsletterSettings = $newsletterSettings ?? (App\Models\SiteSetting::query()->where('key', 'newsletter')->value('value') ?? []);
+    $contact = $contact ?? (App\Models\SiteSetting::query()->where('key', 'contact')->value('value') ?? []);
+    $whatsapp = preg_replace('/\D+/', '', $contact['whatsapp'] ?? '5491147272836');
+    $whatsappMessage = rawurlencode('Hola Moldpack, quisiera recibir más información.');
+@endphp
+<footer class="site-footer" id="contacto">
+    <div class="shell footer-content">
+        <div class="footer-brand"><img src="{{ asset('assets/figma/exact/logo-header.png') }}" alt="Moldpack"><div class="social">@foreach($socialLinks as $social)@if(!empty($social['url']) && !empty($social['icon']))<a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social['name'] }}"><img src="{{ str_starts_with($social['icon'], 'http') ? $social['icon'] : asset($social['icon']) }}" alt=""></a>@endif @endforeach</div></div>
+        <div class="footer-sections"><h3>Secciones</h3><a href="/nosotros" @if($privateMode) data-public-destination="/nosotros" @endif>Nosotros</a><a href="/productos" @if($privateMode) data-public-destination="/productos" @endif>Productos</a><a href="/catalogo" @if($privateMode) data-public-destination="/catalogo" @endif>Catálogo</a><a href="/novedades" @if($privateMode) data-public-destination="/novedades" @endif>Novedades</a><a href="/contacto" @if($privateMode) data-public-destination="/contacto" @endif>Contacto</a></div>
+        <div class="footer-newsletter"><h3>{{ $newsletterSettings['title'] ?? 'Suscribite al Newsletter' }}</h3><form class="newsletter-form" method="post" action="{{ route('newsletter.subscribe') }}">@csrf<input class="contact-honeypot" name="newsletter_website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><label class="newsletter"><input type="email" name="newsletter_email" value="{{ old('newsletter_email') }}" placeholder="{{ $newsletterSettings['placeholder'] ?? 'Ingresá tu email' }}" aria-label="Ingresá tu email" required><button type="submit" aria-label="Suscribirse"><img src="{{ asset('assets/figma/exact/arrow-right.svg') }}" alt=""><span class="submit-spinner" aria-hidden="true"></span></button></label></form></div>
+        <div class="footer-contact"><h3>Contacto</h3><p><img src="{{ asset('assets/figma/exact/map-pin.svg') }}" alt=""><a href="{{ $contact['maps_url'] ?? 'https://maps.app.goo.gl/gVUD5k7wC3zZhwbX' }}" target="_blank" rel="noopener noreferrer">{{ $contact['address'] ?? 'Dante Alighieri 1377, Don Torcuato.' }}<br>{{ $contact['city'] ?? 'Buenos Aires, Argentina.' }}</a></p><p><img src="{{ asset('assets/figma/exact/phone.svg') }}" alt=""><a href="tel:{{ preg_replace('/[^0-9+]/', '', explode('/', $contact['phone'] ?? '4727-2836')[0]) }}">{{ $contact['phone'] ?? '4727-2836/2837' }}</a></p><p><img src="{{ asset('assets/figma/exact/mail.svg') }}" alt=""><a href="mailto:{{ $contact['email'] ?? 'ventas@moldpack.com.ar' }}">{{ $contact['email'] ?? 'ventas@moldpack.com.ar' }}</a></p></div>
+        <div class="footer-lower"><div class="footer-rule" aria-hidden="true"></div><div class="footer-bottom"><span>© Copyright {{ date('Y') }} MoldPack. Todos los derechos reservados</span><span>By <a href="https://osole.com.ar" target="_blank" rel="noopener noreferrer">Osole</a></span></div></div>
+    </div>
+</footer>
+@if($whatsapp)
+    <a class="whatsapp-float" href="https://wa.me/{{ $whatsapp }}?text={{ $whatsappMessage }}" target="_blank" rel="noopener noreferrer" aria-label="Consultar a Moldpack por WhatsApp"><span class="whatsapp-label"><strong>¿Necesitás ayuda?</strong><small>Escribinos por WhatsApp</small></span><span class="whatsapp-button"><img src="{{ asset('assets/icons/whatsapp.svg') }}" alt=""><span class="whatsapp-status" aria-hidden="true"></span></span></a>
+@endif

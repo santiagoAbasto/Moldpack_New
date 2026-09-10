@@ -1,0 +1,53 @@
+<?php
+
+return [
+    'accepted' => 'El campo :attribute debe ser aceptado.',
+    'after_or_equal' => 'El campo :attribute debe ser una fecha posterior o igual a :date.',
+    'array' => 'El campo :attribute debe ser una lista válida.',
+    'between' => [
+        'numeric' => 'El campo :attribute debe estar entre :min y :max.',
+    ],
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'confirmed' => 'La confirmación de :attribute no coincide.',
+    'current_password' => 'La contraseña del administrador no es correcta.',
+    'date' => 'El campo :attribute debe ser una fecha válida.',
+    'email' => 'Ingresá un correo electrónico válido.',
+    'exists' => 'La selección de :attribute no es válida.',
+    'file' => 'El campo :attribute debe ser un archivo válido.',
+    'image' => 'El campo :attribute debe ser una imagen.',
+    'in' => 'La selección de :attribute no es válida.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'max' => [
+        'array' => 'El campo :attribute no puede tener más de :max elementos.',
+        'file' => 'El archivo :attribute no puede superar :max KB.',
+        'numeric' => 'El campo :attribute no puede ser mayor que :max.',
+        'string' => 'El campo :attribute no puede superar :max caracteres.',
+    ],
+    'mimes' => 'El archivo :attribute debe ser de tipo: :values.',
+    'min' => [
+        'array' => 'El campo :attribute debe tener al menos :min elementos.',
+        'file' => 'El archivo :attribute debe pesar al menos :min KB.',
+        'numeric' => 'El campo :attribute debe ser como mínimo :min.',
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+    ],
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'required' => 'Completá el campo :attribute.',
+    'required_if' => 'Completá el campo :attribute.',
+    'required_unless' => 'Completá el campo :attribute.',
+    'required_with' => 'Completá el campo :attribute cuando :values tenga contenido.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'unique' => 'El valor de :attribute ya está registrado.',
+    'url' => 'Ingresá un enlace completo y válido en :attribute.',
+
+    'attributes' => [
+        'name' => 'nombre',
+        'email' => 'correo electrónico',
+        'password' => 'contraseña',
+        'url' => 'enlace',
+        'icon' => 'icono',
+        'subject' => 'asunto',
+        'body' => 'contenido',
+        'recipient_ids' => 'destinatarios',
+        'image' => 'imagen',
+    ],
+];

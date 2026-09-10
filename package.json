@@ -1,0 +1,38 @@
+{
+  "name": "moldpack-cms",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=26.7.0",
+    "npm": ">=11.12.0"
+  },
+  "packageManager": "npm@11.12.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@inertiajs/react": "3.7.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tiptap/extension-character-count": "3.30.5",
+    "@tiptap/extension-highlight": "3.30.5",
+    "@tiptap/extension-link": "3.30.5",
+    "@tiptap/extension-placeholder": "3.30.5",
+    "@tiptap/extension-text-align": "3.30.5",
+    "@tiptap/extension-underline": "3.30.5",
+    "@tiptap/react": "3.30.5",
+    "@tiptap/starter-kit": "3.30.5",
+    "leaflet": "^1.9.4",
+    "lucide-react": "1.33.0",
+    "motion": "^13.1.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.0",
+    "laravel-vite-plugin": "3.2.0",
+    "lightningcss": "1.33.0",
+    "vite": "8.2.2"
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Moldpack">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B2852"/>
+      <stop offset="1" stop-color="#59152F"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <path d="M14 42.5 18.5 20h6.8l5.8 12.3L41.8 20H50l-4.5 22.5h-7l2.4-12-8.1 9.7h-4.7l-4.5-9.7-2.4 12H14Z" fill="#fff"/>
+  <path d="M14 48h36" stroke="#EC458B" stroke-width="3" stroke-linecap="round"/>
+</svg>
