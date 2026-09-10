@@ -36,9 +36,11 @@ class MySqlDataExportTest extends TestCase
         $sql = implode('', $chunks);
         $this->assertStringContainsString('SET NAMES utf8mb4;', $sql);
         $this->assertStringContainsString('SET FOREIGN_KEY_CHECKS=0;', $sql);
+        $this->assertStringContainsString('CREATE TABLE `pages`', $sql);
+        $this->assertStringContainsString('DROP TABLE IF EXISTS `users`', $sql);
         $this->assertStringContainsString('INSERT INTO `pages`', $sql);
         $this->assertStringContainsString('Página de prueba', $sql);
-        $this->assertStringNotContainsString('INSERT INTO `migrations`', $sql);
+        $this->assertStringContainsString('INSERT INTO `migrations`', $sql);
     }
 
     public function test_only_admin_can_download_the_exact_local_sqlite_backup(): void

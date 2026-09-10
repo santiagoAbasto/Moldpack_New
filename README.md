@@ -213,13 +213,12 @@ Para reportar una vulnerabilidad, seguí las indicaciones de [`SECURITY.md`](SEC
 
 ### Migrar datos locales SQLite a MySQL
 
-El panel en `/dashboard` incluye dos respaldos distintos: **Respaldo local completo** descarga una copia exacta del archivo SQLite local para conservarlo antes de subir el proyecto; **Datos para MySQL** descarga todas las tablas de negocio en SQL compatible con MySQL. El segundo no incluye contraseñas de entorno ni migra la estructura manualmente. En producción el orden correcto es:
+El panel en `/dashboard` incluye dos respaldos distintos: **Respaldo local completo** descarga una copia exacta del archivo SQLite local para conservarlo antes de subir el proyecto; **MySQL completo · phpMyAdmin** descarga estructura, índices, relaciones y todos los datos locales en un único SQL compatible con MySQL 8. El segundo no incluye contraseñas de entorno. Para importarlo en phpMyAdmin, seleccioná una base MySQL vacía y usá **Importar** con el archivo descargado.
 
 1. Crear una base MySQL 8 y completar `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD` en el `.env` del servidor.
-2. Ejecutar `php artisan migrate --force` en el servidor para crear el esquema desde las migraciones versionadas.
-3. Comprobar host, credenciales y tablas sin modificar datos: `php artisan moldpack:mysql:check`.
-4. Descargar el SQL desde `/dashboard` y cargarlo: `mysql --default-character-set=utf8mb4 -h HOST -u USUARIO -p BASE < moldpack-data-AAAA-MM-DD-HHMMSS.sql`.
-5. Ejecutar `php artisan optimize:clear`, `php artisan config:cache` y validar el sitio antes de cambiar DNS o tráfico.
+2. Descargar **MySQL completo · phpMyAdmin** desde `/dashboard` y cargarlo en una base MySQL vacía: `mysql --default-character-set=utf8mb4 -h HOST -u USUARIO -p BASE < moldpack-mysql-complete-AAAA-MM-DD-HHMMSS.sql`.
+3. Configurar las mismas credenciales MySQL en el `.env` del proyecto ya subido y comprobar host y tablas sin modificar datos: `php artisan moldpack:mysql:check`.
+4. Ejecutar `php artisan optimize:clear`, `php artisan config:cache` y validar el sitio antes de cambiar DNS o tráfico.
 
 No copies el `.env` local ni el archivo `database.sqlite` al servidor. El exportador omite migraciones, caché y colas pendientes para evitar importar estados operativos obsoletos.
 

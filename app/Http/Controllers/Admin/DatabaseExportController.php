@@ -12,10 +12,10 @@ class DatabaseExportController extends Controller
 {
     public function mysql(Request $request, MySqlDataExportService $exporter): StreamedResponse
     {
-        $filename = 'moldpack-data-'.now()->format('Y-m-d-His').'.sql';
+        $filename = 'moldpack-mysql-complete-'.now()->format('Y-m-d-His').'.sql';
 
         return response()->streamDownload(
-            fn () => $exporter->stream(fn (string $chunk) => print $chunk, $request->boolean('include_operational')),
+            fn () => $exporter->stream(fn (string $chunk) => print $chunk, ! $request->boolean('without_operational')),
             $filename,
             ['Content-Type' => 'application/sql; charset=utf-8', 'X-Content-Type-Options' => 'nosniff'],
         );
