@@ -6,6 +6,7 @@ use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\PublicSecurityHeaders;
 use App\Http\Middleware\EnsureClient;
 use App\Http\Middleware\ConfirmClientPublicExit;
+use App\Http\Middleware\CollectWebIntelligence;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,10 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [HandleInertiaRequests::class, AdminSecurityHeaders::class, PublicSecurityHeaders::class]);
+        $middleware->web(append: [HandleInertiaRequests::class, AdminSecurityHeaders::class, PublicSecurityHeaders::class, CollectWebIntelligence::class]);
         $middleware->alias(['admin' => EnsureAdmin::class, 'client' => EnsureClient::class, 'client.public-exit' => ConfirmClientPublicExit::class]);
         $middleware->redirectGuestsTo('/admin/login');
-        $middleware->redirectUsersTo('/admin');
+        $middleware->redirectUsersTo('/dashboard');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Central exception customization belongs here.

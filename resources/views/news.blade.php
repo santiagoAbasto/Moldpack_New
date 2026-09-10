@@ -100,6 +100,14 @@
     });
   };
 
+  // En tablet y móvil los filtros arrancan plegados para que las notas se vean primero.
+  if (window.matchMedia('(max-width:1024px)').matches) {
+    root.querySelectorAll('.news-filter-box.open').forEach(box => {
+      box.classList.remove('open');
+      box.querySelector(':scope > button')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
   root.querySelectorAll('.news-filter-box > button').forEach(button => {
     button.addEventListener('click', () => {
       const box = button.closest('.news-filter-box');

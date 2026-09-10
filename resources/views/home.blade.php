@@ -1,6 +1,15 @@
 @extends('layouts.site')
 
 @section('content')
+@php
+    $publicUrl = static function (mixed $candidate, string $fallback): string {
+        $candidate = trim((string) $candidate);
+
+        return $candidate === '' || str_starts_with($candidate, '#') ? $fallback : $candidate;
+    };
+    $productsUrl = route('public.page', ['slug' => 'productos']);
+    $newsUrl = route('public.page', ['slug' => 'novedades']);
+@endphp
 @foreach($page->sections as $section)
     @php($settings = $section->settings ?? [])
 
@@ -22,7 +31,7 @@
                         <div class="shell hero-copy">
                             <h1>{!! nl2br(e($slide->title)) !!}</h1>
                             <div class="rich">{!! $slide->body !!}</div>
-                            <a class="button" href="{{ $slide->url ?: '#productos' }}">{{ $slide->label ?: 'Ver productos' }}</a>
+                            <a class="button" href="{{ $publicUrl($slide->url, $productsUrl) }}">{{ $slide->label ?: 'Ver productos' }}</a>
                             @if($slides->count() > 1)
                                 <div class="slide-dots" role="tablist" aria-label="Slides principales">
                                     @foreach($slides as $dotIndex => $dotSlide)
@@ -37,23 +46,23 @@
                 @php($media = $section->media->first())
                 @if($media)<img src="{{ asset($media->path) }}" alt="{{ $media->alt }}">@endif
                 <div class="hero-shade"></div>
-                <div class="shell hero-copy"><h1>{!! nl2br(e($section->title)) !!}</h1><div class="rich">{!! $section->body !!}</div><a class="button" href="{{ $settings['button_url'] ?? '#productos' }}">{{ $settings['button_label'] ?? 'Ver productos' }}</a></div>
+                <div class="shell hero-copy"><h1>{!! nl2br(e($section->title)) !!}</h1><div class="rich">{!! $section->body !!}</div><a class="button" href="{{ $publicUrl($settings['button_url'] ?? null, $productsUrl) }}">{{ $settings['button_label'] ?? 'Ver productos' }}</a></div>
             @endif
         </section>
     @elseif($section->type === 'categories')
-        <section class="section shell" id="productos"><h2>{{ $section->title }}</h2><div class="category-grid">@foreach($section->items as $item)<a class="category-card" href="{{ $item->url ?: '#' }}"><img src="{{ $item->media->first() ? asset($item->media->first()->path) : asset('assets/figma/category-'.(($loop->index % 3) + 1).'.jpg') }}" alt="{{ $item->media->first()->alt ?? $item->title }}"><span>{{ $item->title }}</span></a>@endforeach</div></section>
+        <section class="section shell" id="productos"><h2>{{ $section->title }}</h2><div class="category-grid">@foreach($section->items as $item)@php($categoryUrl = $productsUrl.'?categoria='.rawurlencode((string) $item->title))<a class="category-card" href="{{ $publicUrl($item->url, $categoryUrl) }}"><img src="{{ $item->media->first() ? asset($item->media->first()->path) : asset('assets/figma/category-'.(($loop->index % 3) + 1).'.jpg') }}" alt="{{ $item->media->first()->alt ?? $item->title }}"><span>{{ $item->title }}</span></a>@endforeach</div></section>
     @elseif($section->type === 'products')
-        <section class="section products shell"><h2>{{ $section->title }}</h2><div class="product-grid">@foreach($section->items as $item)<article class="product"><a class="product-media product-media-{{ $loop->index }}" href="{{ $item->url ?: '#' }}" aria-label="Ver {{ $item->title }}"><img src="{{ $item->media->first()?->path ? asset($item->media->first()->path) : asset('assets/product-placeholder.svg') }}" alt="{{ $item->title }}" width="288" height="288" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('assets/product-placeholder.svg') }}'"></a><p>{{ $item->subtitle }}</p><h3>{{ $item->title }}</h3><div class="product-presentations"><span>PRESENTACIONES: {{ $item->label ?: 'Consultar disponibilidad' }}</span></div></article>@endforeach</div></section>
+        <section class="section products shell"><h2>{{ $section->title }}</h2><div class="product-grid">@foreach($section->items as $item)@php($productUrl = !empty($item->settings['slug']) ? route('products.show', ['product' => $item->settings['slug']]) : $productsUrl)<article class="product"><a class="product-media product-media-{{ $loop->index }}" href="{{ $publicUrl($item->url, $productUrl) }}" aria-label="Ver {{ $item->title }}"><img src="{{ $item->media->first()?->path ? asset($item->media->first()->path) : asset('assets/product-placeholder.svg') }}" alt="{{ $item->title }}" width="288" height="288" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('assets/product-placeholder.svg') }}'"></a><p>{{ $item->subtitle }}</p><h3>{{ $item->title }}</h3><div class="product-presentations"><span>PRESENTACIONES: {{ $item->label ?: 'Consultar disponibilidad' }}</span></div></article>@endforeach</div></section>
     @elseif($section->type === 'about')
-        <section class="about shell" id="nosotros"><div class="about-image"><img src="{{ $section->media->first() ? asset($section->media->first()->path) : asset('assets/figma/about.jpg') }}" alt="{{ $section->media->first()->alt ?? 'Nosotros' }}"></div><div><h2>{{ $section->title }}</h2><div class="rich">{!! $section->body !!}</div><a class="button outline" href="{{ $settings['button_url'] ?? '#' }}">{{ $settings['button_label'] ?? 'Más información' }}</a></div></section>
+        <section class="about shell" id="nosotros"><div class="about-image"><img src="{{ $section->media->first() ? asset($section->media->first()->path) : asset('assets/figma/about.jpg') }}" alt="{{ $section->media->first()->alt ?? 'Nosotros' }}"></div><div><h2>{{ $section->title }}</h2><div class="rich">{!! $section->body !!}</div><a class="button outline" href="{{ $publicUrl($settings['button_url'] ?? null, route('public.page', ['slug' => 'nosotros'])) }}">{{ $settings['button_label'] ?? 'Más información' }}</a></div></section>
     @elseif($section->type === 'news')
-        <section class="section shell" id="novedades"><div class="section-head"><h2>{{ $section->title }}</h2><a class="button outline" href="{{ $settings['button_url'] ?? '#' }}">{{ $settings['button_label'] ?? 'Ver todas' }}</a></div><div class="news-grid">@foreach($section->items as $item)<article class="news-card"><a class="news-media" href="{{ $item->url ?: '#' }}" aria-label="Leer {{ $item->title }}"><img src="{{ $item->media->first() ? asset($item->media->first()->path) : asset('assets/figma/news-'.(($loop->index % 3) + 1).'.jpg') }}" alt="{{ $item->title }}"></a><div><small>{{ $item->label ?: 'PRODUCTOS' }}</small><h3>{{ $item->title }}</h3><div class="excerpt">{!! $item->body !!}</div><a href="{{ $item->url ?: '#' }}">Leer más</a></div></article>@endforeach</div></section>
+        <section class="section shell" id="novedades"><div class="section-head"><h2>{{ $section->title }}</h2><a class="button outline" href="{{ $publicUrl($settings['button_url'] ?? null, $newsUrl) }}">{{ $settings['button_label'] ?? 'Ver todas' }}</a></div><div class="news-grid">@foreach($section->items as $item)@php($newsSlug = $item->settings['slug'] ?? \Illuminate\Support\Str::slug($item->title ?: 'novedad').'-'.$item->id)@php($articleUrl = route('news.show', ['news' => $newsSlug]))<article class="news-card"><a class="news-media" href="{{ $publicUrl($item->url, $articleUrl) }}" aria-label="Leer {{ $item->title }}"><img src="{{ $item->media->first() ? asset($item->media->first()->path) : asset('assets/figma/news-'.(($loop->index % 3) + 1).'.jpg') }}" alt="{{ $item->title }}"></a><div><small>{{ $item->label ?: 'PRODUCTOS' }}</small><h3>{{ $item->title }}</h3><div class="excerpt">{!! $item->body !!}</div><a href="{{ $publicUrl($item->url, $articleUrl) }}">Leer más</a></div></article>@endforeach</div></section>
     @elseif($section->type === 'rich_text')
         <section class="section shell prose"><h2>{{ $section->title }}</h2><div class="rich">{!! $section->body !!}</div></section>
     @elseif($section->type === 'media')
         <section class="section shell prose"><h2>{{ $section->title }}</h2>@foreach($section->media as $media)@if($media->kind === 'youtube')<div class="video"><iframe src="https://www.youtube.com/embed/{{ preg_replace('~^.*(?:youtu.be/|v=|embed/)([^?&/]+).*$~', '$1', $media->url) }}" allowfullscreen></iframe></div>@elseif($media->kind === 'video')<video controls class="content-video"><source src="{{ asset($media->path) }}"></video>@else<img class="content-image" src="{{ asset($media->path) }}" alt="{{ $media->alt }}">@endif @endforeach</section>
     @elseif($section->type === 'cta')
-        <section class="cta" id="catalogo" style="--cta-bg:url('{{ $section->media->first() ? asset($section->media->first()->path) : asset('assets/figma/exact/catalog-bg.png') }}')"><div class="shell"><h2>{{ $section->title }}</h2><div class="rich">{!! $section->body !!}</div><a class="button" href="{{ $settings['button_url'] ?? '#contacto' }}">{{ $settings['button_label'] ?? 'Contactanos' }}</a></div></section>
+        <section class="cta" id="catalogo" style="--cta-bg:url('{{ $section->media->first() ? asset($section->media->first()->path) : asset('assets/figma/exact/catalog-bg.png') }}')"><div class="shell"><h2>{{ $section->title }}</h2><div class="rich">{!! $section->body !!}</div><a class="button" href="{{ $publicUrl($settings['button_url'] ?? null, route('public.page', ['slug' => 'catalogo'])) }}">{{ $settings['button_label'] ?? 'Contactanos' }}</a></div></section>
     @endif
 @endforeach
 

@@ -8,6 +8,7 @@ use App\Models\ClientOrder;
 use App\Models\ClientPaymentReport;
 use App\Models\ContentItem;
 use App\Models\SiteSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -81,14 +82,16 @@ class ClientAreaController extends Controller
         })->filter()->values();
         $invoices = $orders->flatMap->invoices->where('status', '!=', 'cancelled')->sortByDesc('issued_at')->values();
         $paymentReports = $client->paymentReports()->latest('paid_at')->get();
-        $paid = (float) $paymentReports->where('status', 'verified')->sum('amount');
-        $balance = max(0, (float) $invoices->sum('total') - $paid);
+        $invoiceOutstanding = $this->invoiceOutstandingBalances($invoices, $paymentReports);
+        $pendingInvoices = $invoices->filter(fn (ClientInvoice $invoice) => (float) $invoiceOutstanding->get($invoice->id, 0) > 0.005)->values();
+        $balance = (float) $invoiceOutstanding->sum();
+        $overdueBalance = (float) $invoices->filter(fn (ClientInvoice $invoice) => $invoice->due_at?->isPast())->sum(fn (ClientInvoice $invoice) => $invoiceOutstanding->get($invoice->id, 0));
         $settings = SiteSetting::query()->where('key', 'client_portal')->value('value') ?? [];
         $contact = SiteSetting::query()->where('key', 'contact')->value('value') ?? [];
         $socialLinks = SiteSetting::query()->where('key', 'social')->value('value')['links'] ?? [];
         $newsletterSettings = SiteSetting::query()->where('key', 'newsletter')->value('value') ?? [];
         $categories = $products->map(fn ($product) => data_get($product->settings, 'category') ?: explode('/', (string) $product->subtitle)[0])->map(fn ($v) => trim((string) $v))->filter()->unique()->values();
-        return view('client.portal', compact('section', 'client', 'orders', 'products', 'cart', 'cartLines', 'invoices', 'paymentReports', 'balance', 'settings', 'categories', 'contact', 'socialLinks', 'newsletterSettings'));
+        return view('client.portal', compact('section', 'client', 'orders', 'products', 'cart', 'cartLines', 'invoices', 'pendingInvoices', 'invoiceOutstanding', 'paymentReports', 'balance', 'overdueBalance', 'settings', 'categories', 'contact', 'socialLinks', 'newsletterSettings'));
     }
 
     public function addToCart(Request $request): RedirectResponse
@@ -161,15 +164,71 @@ class ClientAreaController extends Controller
         return redirect()->route('client.portal', 'pedidos')->with('success', 'Pedido enviado correctamente.');
     }
 
+    public function reorder(Request $request, ClientOrder $order): RedirectResponse
+    {
+        abort_unless($order->cliente_id === $request->user('cliente')->id, 403);
+
+        $cart = $this->cart()->all();
+        $added = 0;
+        $order->loadMissing('items');
+        $products = ContentItem::query()
+            ->whereIn('id', $order->items->pluck('content_item_id')->filter())
+            ->where('is_visible', true)
+            ->get()
+            ->keyBy('id');
+
+        foreach ($order->items as $item) {
+            $product = $products->get($item->content_item_id);
+            if (! $product) continue;
+
+            $presentations = $this->purchasablePresentations($product);
+            if ($presentations->isEmpty() || $presentations->every(fn ($presentation) => (float) ($presentation['price'] ?? 0) <= 0)) continue;
+            $presentationIndex = $presentations->search(fn ($presentation) =>
+                ($item->sku && ($presentation['code'] ?? null) === $item->sku)
+                || ($item->presentation && ($presentation['name'] ?? null) === $item->presentation)
+            );
+            $presentationIndex = $presentationIndex === false ? 0 : (int) $presentationIndex;
+            if ((float) ($presentations->get($presentationIndex)['price'] ?? 0) <= 0) continue;
+            $key = $product->id.':'.$presentationIndex;
+            $quantity = max(1, (int) $item->quantity);
+            $cart[$key] = [
+                'product_id' => $product->id,
+                'presentation_index' => $presentationIndex,
+                'quantity' => min(9999, ($cart[$key]['quantity'] ?? 0) + $quantity),
+            ];
+            $added += $quantity;
+        }
+
+        if ($added === 0) {
+            return back()->withErrors(['reorder' => 'Los productos de este pedido ya no están disponibles.']);
+        }
+
+        session(['client_cart' => $cart]);
+
+        return redirect()->route('client.portal', 'carrito')->with('success', 'Agregamos nuevamente los productos disponibles a tu carrito.');
+    }
+
     public function reportPayment(Request $request): RedirectResponse
     {
         /** @var Cliente $client */ $client = $request->user('cliente');
+        if (preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', (string) $request->input('paid_at'), $date)) {
+            $request->merge(['paid_at' => $date[3].'-'.$date[2].'-'.$date[1]]);
+        }
         $data = $request->validate([
-            'paid_at' => ['required', 'date', 'before_or_equal:today'], 'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999'],
-            'bank' => ['required', 'string', 'max:160'], 'branch' => ['nullable', 'string', 'max:160'], 'invoice_ids' => ['nullable', 'array'],
+            'paid_at' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'], 'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999'],
+            'bank' => ['required', 'string', 'max:160'], 'branch' => ['required', 'string', 'max:160'], 'invoice_ids' => ['required', 'array', 'min:1'],
             'invoice_ids.*' => [Rule::exists('client_invoices', 'id')->where(fn ($query) => $query->whereIn('client_order_id', $client->orders()->select('id')))],
             'observations' => ['nullable', 'string', 'max:1500'], 'receipt' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
         ]);
+        $clientInvoices = $client->orders()->with('invoices')->get()->flatMap->invoices->where('status', '!=', 'cancelled')->values();
+        $outstanding = $this->invoiceOutstandingBalances($clientInvoices, $client->paymentReports()->get());
+        $selectedBalance = collect($data['invoice_ids'])->unique()->sum(fn ($invoiceId) => (float) $outstanding->get((int) $invoiceId, 0));
+        if ($selectedBalance <= 0.005) {
+            throw ValidationException::withMessages(['invoice_ids' => 'Las facturas seleccionadas ya no tienen saldo pendiente.']);
+        }
+        if ((float) $data['amount'] > $selectedBalance + 0.005) {
+            throw ValidationException::withMessages(['amount' => 'El importe no puede superar el saldo pendiente seleccionado de $'.number_format($selectedBalance, 2, ',', '.')]);
+        }
         $data['cliente_id'] = $client->id; $data['receipt_path'] = $request->file('receipt')->store('payment-receipts', 'public'); unset($data['receipt']);
         ClientPaymentReport::create($data);
         return back()->with('success', 'Comprobante informado. Lo validaremos a la brevedad.');
@@ -184,7 +243,19 @@ class ClientAreaController extends Controller
             if (is_file(public_path($invoice->document_path))) return response()->download(public_path($invoice->document_path));
         }
         $invoice->load('order.cliente', 'order.items');
-        return response()->view('client.invoice-download', compact('invoice'), 200, ['Content-Disposition' => 'attachment; filename="factura-'.preg_replace('/[^A-Za-z0-9-]/', '-', $invoice->number).'.html"']);
+        $filename = 'factura-'.preg_replace('/[^A-Za-z0-9-]/', '-', $invoice->number).'.pdf';
+
+        return Pdf::loadView('client.invoice-download', compact('invoice'))
+            ->setPaper('a4')
+            ->download($filename);
+    }
+
+    public function downloadPaymentReceipt(Request $request, ClientPaymentReport $payment)
+    {
+        abort_unless($payment->cliente_id === $request->user('cliente')->id, 403);
+        abort_unless($payment->receipt_path && Storage::disk('public')->exists($payment->receipt_path), 404);
+
+        return Storage::disk('public')->download($payment->receipt_path);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -211,6 +282,28 @@ class ClientAreaController extends Controller
             $quantity = max(0, (int) $value);
             return $quantity ? [((int) $key).':0' => ['product_id' => (int) $key, 'presentation_index' => 0, 'quantity' => $quantity]] : [];
         });
+    }
+
+    private function invoiceOutstandingBalances(Collection $invoices, Collection $paymentReports): Collection
+    {
+        $balances = $invoices->mapWithKeys(fn (ClientInvoice $invoice) => [$invoice->id => max(0, (float) $invoice->total)]);
+        $fallbackOrder = $invoices->sortBy(fn (ClientInvoice $invoice) => ($invoice->due_at?->timestamp ?? PHP_INT_MAX).'-'.str_pad((string) $invoice->id, 12, '0', STR_PAD_LEFT))->pluck('id');
+
+        foreach ($paymentReports->where('status', 'verified')->sortBy(fn (ClientPaymentReport $payment) => ($payment->paid_at?->timestamp ?? 0).'-'.str_pad((string) $payment->id, 12, '0', STR_PAD_LEFT)) as $payment) {
+            $remaining = max(0, (float) $payment->amount);
+            $invoiceIds = collect($payment->invoice_ids)->map(fn ($id) => (int) $id)->filter(fn ($id) => $balances->has($id))->unique()->values();
+            if ($invoiceIds->isEmpty()) $invoiceIds = $fallbackOrder;
+
+            foreach ($invoiceIds as $invoiceId) {
+                if ($remaining <= 0.005) break;
+                $current = (float) $balances->get($invoiceId, 0);
+                $applied = min($current, $remaining);
+                $balances->put($invoiceId, round($current - $applied, 2));
+                $remaining = round($remaining - $applied, 2);
+            }
+        }
+
+        return $balances;
     }
 
     private function purchasablePresentations(?ContentItem $product): Collection

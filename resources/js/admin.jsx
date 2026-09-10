@@ -46,6 +46,13 @@ import {
   Video,
   X,
   CircleAlert,
+  Activity,
+  BarChart3,
+  Bot,
+  Gauge,
+  MousePointerClick,
+  ShieldAlert,
+  ChartNoAxesCombined,
 } from 'lucide-react';
 
 const csrf = document.querySelector('meta[name="csrf-token"]').content;
@@ -87,10 +94,15 @@ const primaryNav = [
   { key: 'private', label: 'Zona privada', icon: ShieldCheck, children: privateChildren },
 ];
 
+function WhatsAppIcon({ size = 19, ...props }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.5-4.3A8.5 8.5 0 1 1 20.5 11.6Z"/><path d="M9.1 8.7c.2-.5.5-.7.8-.7h.5c.2 0 .4.1.5.4l.7 1.6c.1.2 0 .5-.1.7l-.5.6a6.2 6.2 0 0 0 2.8 2.8l.6-.5c.2-.2.5-.2.7-.1l1.6.7c.3.1.4.3.4.5v.5c0 .3-.2.6-.7.8-.5.3-1.4.4-2.6-.1a9.4 9.4 0 0 1-4.8-4.8c-.5-1.2-.4-2.1-.1-2.4Z"/></svg>;
+}
+
 const utilityNav = [
   { key: 'newsletter', label: 'Newsletter', icon: Mail },
   { key: 'social', label: 'Redes sociales del footer', icon: Share2 },
   { key: 'seo', label: 'SEO de la web', icon: Search },
+  { key: 'whatsapp', label: 'WhatsApp', icon: WhatsAppIcon },
   { key: 'users', label: 'Usuarios', icon: UserRound },
 ];
 
@@ -692,6 +704,25 @@ function ContactModule({ initial = {}, inquiries = { data: [] } }) {
   </ModuleFrame>;
 }
 
+function WhatsAppModule({ contact = {} }) {
+  const [number, setNumber] = useState(contact.whatsapp || '');
+  useEffect(() => setNumber(contact.whatsapp || ''), [contact.whatsapp]);
+  const digits = number.replace(/\D+/g, '');
+  const valid = digits.length >= 8 && digits.length <= 15;
+  const save = () => router.put('/admin/settings/whatsapp', { value: { number } }, { preserveScroll: true });
+  return <ModuleFrame eyebrow="Atención inmediata" title="WhatsApp" description="Configurá el número del botón flotante de WhatsApp que aparece en todo el sitio público.">
+    <article className="content-panel elevated">
+      <div className="panel-heading"><div><span>Botón flotante</span><h2>Número de WhatsApp</h2></div><div className="module-badge"><WhatsAppIcon size={15} />{contact.whatsapp ? 'Visible' : 'Sin número'}</div></div>
+      <div className="panel-body">
+        <div className="contact-admin-note"><WhatsAppIcon size={19} /><span><strong>Formato internacional</strong><small>Código de país + código de área + número, sin 0 ni 15. Ejemplo para Argentina: 54 9 11 4727 2836.</small></span></div>
+        <div className="form-grid"><label className="wide">Número de WhatsApp<input inputMode="tel" value={number} placeholder="54 9 11 4727 2836" onChange={(event) => setNumber(event.target.value)} /><small>{digits ? `Se publicará como wa.me/${digits}` : 'Ingresá el número completo con código de país.'}</small></label></div>
+        {valid && <div className="contact-official-map"><WhatsAppIcon size={20} /><span><strong>Vista previa del botón</strong><small>Abre un chat con +{digits}</small></span><a href={`https://wa.me/${digits}`} target="_blank" rel="noreferrer">Probar</a></div>}
+        <div className="editor-actions"><button className="save" type="button" disabled={!valid} onClick={save}><Save size={17} />Guardar número</button></div>
+      </div>
+    </article>
+  </ModuleFrame>;
+}
+
 function UsersModule({ users }) {
   const blank = { name: '', email: '', password: '', password_confirmation: '', is_admin: true };
   const [form, setForm] = useState(blank);
@@ -767,9 +798,25 @@ function InvoiceModule({ invoices=[] }) { return <div className="module-content 
 function PaymentModule({ payments=[] }) { return <div className="module-content private-module"><PrivateHeader eyebrow="CONTABILIDAD" title="Comprobantes de pago" text="Validá los pagos informados por los clientes y consultá sus comprobantes." count={payments.length}/><div className="private-table-wrap"><table className="private-table"><thead><tr><th>Cliente</th><th>Fecha</th><th>Banco / sucursal</th><th>Importe</th><th>Comprobante</th><th>Estado</th></tr></thead><tbody>{payments.map(p=><tr key={p.id}><td><strong>{p.cliente?.business_name||p.cliente?.name}</strong><small>{p.cliente?.email}</small></td><td>{date(p.paid_at)}</td><td>{p.bank}<small>{p.branch||'Sin sucursal'}</small></td><td><strong>{money(p.amount)}</strong></td><td>{p.receipt_path?<a href={'/storage/'+p.receipt_path} target="_blank" rel="noreferrer">Ver archivo</a>:'—'}</td><td><select value={p.status} onChange={e=>router.put('/admin/pagos/'+p.id,{status:e.target.value},{preserveScroll:true})}><option value="pending">Pendiente</option><option value="verified">Verificado</option><option value="rejected">Rechazado</option></select></td></tr>)}</tbody></table>{!payments.length&&<div className="client-list-empty">Todavía no se informaron pagos.</div>}</div></div>; }
 function ExportModule({ commerce }) { const total=commerce.totals||{}; return <div className="module-content private-module"><PrivateHeader eyebrow="CONTABILIDAD" title="Exportación" text="Descargá la base completa en CSV compatible con Excel; se genera por lotes para grandes volúmenes."/><div className="export-grid"><a href="/admin/zona-privada/exportar/clientes"><Users size={24}/><strong>Clientes</strong><span>{total.clients||commerce.clients.length} registros · CSV completo</span></a><a href="/admin/zona-privada/exportar/pedidos"><Package size={24}/><strong>Pedidos</strong><span>{total.orders||commerce.orders.length} registros · CSV completo</span></a><a href="/admin/zona-privada/exportar/stock"><Grid2X2 size={24}/><strong>Stock</strong><span>{commerce.products.length} productos · CSV completo</span></a></div></div>; }
 
-function Cms({ pages, recommendations, flash, errors, siteSettings, users, contactInquiries, newsletter, commerce = { clients:[], orders:[], invoices:[], products:[], totals:{} } }) {
+const intelligenceLabels={visitors:'Visitantes humanos',sessions:'Sesiones',pageviews:'Páginas vistas',requests:'Solicitudes',bots:'Bots probables',security:'Eventos de seguridad',errors:'Errores HTTP',avg_response_ms:'Respuesta media'};
+const intelligenceIcons={visitors:Users,sessions:MousePointerClick,pageviews:BarChart3,requests:Activity,bots:Bot,security:ShieldAlert,errors:CircleAlert,avg_response_ms:Gauge};
+function MetricBars({items=[],empty='Todavía no hay datos para este período.'}){const max=Math.max(1,...items.map(item=>item.value));return <div className="intel-bars">{items.map(item=><div className="intel-bar" key={item.label}><div><span title={item.label}>{item.label}</span><strong>{item.value.toLocaleString('es-AR')}</strong></div><i><b style={{width:`${Math.max(3,item.value/max*100)}%`}}/></i></div>)}{!items.length&&<p className="intel-empty">{empty}</p>}</div>}
+function IntelligenceDashboard({data}){
+  const metrics=data?.metrics||{};const timeline=data?.timeline||[];const max=Math.max(1,...timeline.map(item=>item.requests));
+  return <div className="intelligence-dashboard">
+    <header className="intel-header"><div><span>SECURITY &amp; TRAFFIC INTELLIGENCE CENTER</span><h1>Vista general</h1><p>Tráfico, conversiones y señales operativas obtenidas del sitio real.</p></div><div className="intel-header-actions"><div className="intel-export-group"><a className="intel-export" href="/admin/database/export/sqlite"><Upload size={15}/>Respaldo local completo</a><a className="intel-export secondary" href="/admin/database/export/mysql"><Upload size={15}/>Datos para MySQL</a></div><div className="intel-range" aria-label="Período">{['today','24h','7d','30d','90d'].map(range=><a key={range} className={data?.range===range?'active':''} href={`/dashboard?range=${range}`}>{range==='today'?'Hoy':range}</a>)}</div></div></header>
+    {!data?.available&&<div className="intel-notice"><ShieldCheck size={20}/><div><strong>Instrumentación preparada</strong><span>Ejecutá las migraciones para comenzar a registrar actividad. No se muestran cifras simuladas.</span></div></div>}
+    <section className="intel-kpis">{Object.keys(intelligenceLabels).map(key=>{const Icon=intelligenceIcons[key];return <article key={key}><span className={`intel-kpi-icon ${key}`}><Icon size={19}/></span><div><small>{intelligenceLabels[key]}</small><strong>{Number(metrics[key]||0).toLocaleString('es-AR')}{key==='avg_response_ms'?' ms':''}</strong></div></article>})}</section>
+    <section className="intel-grid intel-grid-main"><article className="intel-panel intel-timeline"><header><div><span>Tráfico verificado</span><h2>Solicitudes por día</h2></div><small>Desde {new Date(data?.from||Date.now()).toLocaleDateString('es-AR')}</small></header><div className="intel-chart">{timeline.map(item=><div className="intel-chart-column" key={item.day} title={`${item.day}: ${item.requests}`}><i style={{height:`${Math.max(5,item.requests/max*100)}%`}}/><span>{new Date(`${item.day}T12:00:00`).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span></div>)}{!timeline.length&&<p className="intel-empty">Sin actividad capturada en este período.</p>}</div></article><article className="intel-panel"><header><div><span>Contenido</span><h2>Páginas principales</h2></div></header><MetricBars items={data?.top_pages}/></article></section>
+    <section className="intel-grid intel-grid-three"><article className="intel-panel"><header><div><span>Adquisición</span><h2>Origen del tráfico</h2></div></header><MetricBars items={data?.sources}/></article><article className="intel-panel"><header><div><span>Tecnología</span><h2>Dispositivos</h2></div></header><MetricBars items={data?.devices}/></article><article className="intel-panel intel-conversions"><header><div><span>Negocio</span><h2>Conversiones reales</h2></div></header><div><p><span>Consultas</span><strong>{metrics.contacts||0}</strong></p><p><span>Altas newsletter</span><strong>{metrics.subscribers||0}</strong></p><p><span>Pedidos</span><strong>{metrics.orders||0}</strong></p></div></article></section>
+    <section className="intel-grid intel-grid-main"><article className="intel-panel intel-table-panel"><header><div><span>Última actividad</span><h2>Solicitudes recientes</h2></div><small>IP anonimizada</small></header><div className="intel-table"><div className="intel-table-head"><span>Hora</span><span>Ruta</span><span>Estado</span><span>Clase</span></div>{(data?.recent||[]).map((row,index)=><div className="intel-table-row" key={`${row.time}-${index}`}><span>{new Date(row.time).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</span><span title={row.path}><b>{row.method}</b> {row.path}</span><span className={row.status>=400?'bad':'good'}>{row.status}</span><span>{row.class}</span></div>)}{!data?.recent?.length&&<p className="intel-empty">Aún no se registraron solicitudes.</p>}</div></article><article className="intel-panel intel-security"><header><div><span>Seguridad</span><h2>Señales recientes</h2></div><small>{metrics.security||0} eventos</small></header>{(data?.security_events||[]).map((event,index)=><div className="intel-security-row" key={`${event.time}-${index}`}><span className={`risk ${event.risk}`}>{event.risk}</span><div><strong>{event.type.replaceAll('_',' ')}</strong><small title={event.path}>{event.ip} · {event.path}</small></div></div>)}{!data?.security_events?.length&&<div className="intel-safe"><ShieldCheck size={25}/><strong>Sin señales en el período</strong><span>Esto no garantiza ausencia de riesgo.</span></div>}</article></section>
+    <footer className="intel-health"><span><i className="ok"/>Base de datos: <strong>{data?.health?.database||'—'}</strong></span><span><i className={data?.health?.failed_jobs?'warn':'ok'}/>Trabajos fallidos: <strong>{data?.health?.failed_jobs??'sin dato'}</strong></span><span>Cola: <strong>{data?.health?.queue_connection||'—'}</strong></span><span>Geografía: <strong>{data?.geography?.available?'activa':'sin proveedor configurado'}</strong></span></footer>
+  </div>;
+}
+
+function Cms({ pages, recommendations, flash, errors, siteSettings, users, contactInquiries, newsletter, intelligence, initialModule='home_hero', commerce = { clients:[], orders:[], invoices:[], products:[], totals:{} } }) {
   const page = pages.find((item) => item.slug === 'inicio') || pages[0];
-  const [selected, setSelected] = useState('home_hero');
+  const [selected, setSelected] = useState(initialModule);
   const [homeOpen, setHomeOpen] = useState(true);
   const [productsOpen, setProductsOpen] = useState(true);
   const [privateOpen, setPrivateOpen] = useState(true);
@@ -779,8 +826,10 @@ function Cms({ pages, recommendations, flash, errors, siteSettings, users, conta
   const currentSection = useMemo(() => selectedNav?.section ? selectedPage?.sections.find((section) => section.type === selectedNav.section) : selectedNav?.pageSlug ? selectedPage?.sections?.[0] : null, [selectedPage, selectedNav]);
 
   let content;
-  if (selected === 'seo') content = <SeoModule pages={pages} />;
+  if (selected === 'intelligence') content = <IntelligenceDashboard data={intelligence} />;
+  else if (selected === 'seo') content = <SeoModule pages={pages} />;
   else if (selected === 'users') content = <UsersModule users={users} />;
+  else if (selected === 'whatsapp') content = <WhatsAppModule contact={siteSettings.contact} />;
   else if (selected === 'contact') content = <ContactModule initial={siteSettings.contact} inquiries={contactInquiries} />;
   else if (selected === 'newsletter') content = <NewsletterModule newsletter={newsletter} />;
   else if (selected === 'social') content = <SocialModule initial={siteSettings.social} />;
@@ -799,7 +848,7 @@ function Cms({ pages, recommendations, flash, errors, siteSettings, users, conta
   else if (currentSection) content = <>{selectedNav?.pageSlug && ['categorias', 'productos', 'novedades'].includes(selectedNav.pageSlug) && <div className="module-content presence-wrap"><PagePresenceSwitch page={selectedPage} /></div>}<SectionEditor key={currentSection.id} section={currentSection} recommendations={recommendations} /></>;
   else content = <div className="empty-state"><h2>Módulo no configurado</h2><p>Esta sección todavía no existe.</p></div>;
 
-  return <div className="admin-shell elevated-shell"><AppleNotification flash={flash} errors={errors} /><aside className="admin-sidebar premium-sidebar"><div className="sidebar-brand"><img src="/assets/figma/exact/logo-header.png" alt="Moldpack" /><div><strong>Moldpack</strong><span>Content Studio</span></div></div><nav><p className="nav-label">Sitio web</p>{primaryNav.map(({ key, label, icon: Icon, children }) => { const isHomeParent = key === 'home'; const isProductsParent = key === 'products_parent'; const isPrivateParent = key === 'private'; const isOpen = isHomeParent ? homeOpen : isProductsParent ? productsOpen : isPrivateParent ? privateOpen : false; const childActive = !!children?.some((child) => child.key === selected); return <React.Fragment key={key}>{isPrivateParent&&<p className="nav-label utility">Operaciones</p>}<button type="button" className={childActive ? 'active parent-open' : selected === key ? 'active' : ''} onClick={() => children ? (isHomeParent ? setHomeOpen(!homeOpen) : isProductsParent ? setProductsOpen(!productsOpen) : setPrivateOpen(!privateOpen)) : setSelected(key)}><Icon size={19} /><span>{label}</span>{children ? (isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />) : <ChevronRight size={15} />}</button>{children && isOpen && <div className="home-subnav">{children.map(({ key: childKey, label: childLabel, icon: ChildIcon }) => <button key={childKey} type="button" className={selected === childKey ? 'active' : ''} onClick={() => setSelected(childKey)}><ChildIcon size={16} /><span>{childLabel}</span></button>)}</div>}</React.Fragment>; })}<p className="nav-label utility">Módulos</p>{utilityNav.map(({ key, label, icon: Icon }) => <button key={key} type="button" className={selected === key ? 'active' : ''} onClick={() => setSelected(key)}><Icon size={19} /><span>{label}</span><ChevronRight size={15} /></button>)}</nav><div className="sidebar-footer"><a href="/" target="_blank" rel="noreferrer"><Eye size={18} />Ver sitio público</a><form method="post" action="/admin/logout"><input type="hidden" name="_token" value={csrf} /><button type="submit"><LogOut size={18} />Cerrar sesión</button></form></div></aside><main className="admin-main premium-main"><div className="mobile-topbar"><LayoutDashboard size={20} /><strong>CMS Moldpack</strong></div>{content}</main></div>;
+  return <div className="admin-shell elevated-shell"><AppleNotification flash={flash} errors={errors} /><aside className="admin-sidebar premium-sidebar"><div className="sidebar-brand"><img src="/assets/figma/exact/logo-header.png" alt="Moldpack" /><div><strong>Moldpack</strong><span>Content Studio</span></div></div><nav><p className="nav-label">Inteligencia</p><a href="/dashboard" className={`admin-nav-link ${selected==='intelligence'?'active':''}`}><ChartNoAxesCombined size={20}/><span>Vista general</span><ChevronRight size={15}/></a><p className="nav-label">Sitio web</p>{primaryNav.map(({ key, label, icon: Icon, children }) => { const isHomeParent = key === 'home'; const isProductsParent = key === 'products_parent'; const isPrivateParent = key === 'private'; const isOpen = isHomeParent ? homeOpen : isProductsParent ? productsOpen : isPrivateParent ? privateOpen : false; const childActive = !!children?.some((child) => child.key === selected); return <React.Fragment key={key}>{isPrivateParent&&<p className="nav-label utility">Operaciones</p>}<button type="button" className={childActive ? 'active parent-open' : selected === key ? 'active' : ''} onClick={() => children ? (isHomeParent ? setHomeOpen(!homeOpen) : isProductsParent ? setProductsOpen(!productsOpen) : setPrivateOpen(!privateOpen)) : setSelected(key)}><Icon size={19} /><span>{label}</span>{children ? (isOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />) : <ChevronRight size={15} />}</button>{children && isOpen && <div className="home-subnav">{children.map(({ key: childKey, label: childLabel, icon: ChildIcon }) => <button key={childKey} type="button" className={selected === childKey ? 'active' : ''} onClick={() => setSelected(childKey)}><ChildIcon size={16} /><span>{childLabel}</span></button>)}</div>}</React.Fragment>; })}<p className="nav-label utility">Módulos</p>{utilityNav.map(({ key, label, icon: Icon }) => <button key={key} type="button" className={selected === key ? 'active' : ''} onClick={() => setSelected(key)}><Icon size={19} /><span>{label}</span><ChevronRight size={15} /></button>)}</nav><div className="sidebar-footer"><a href="/" target="_blank" rel="noreferrer"><Eye size={18} />Ver sitio público</a><form method="post" action="/admin/logout"><input type="hidden" name="_token" value={csrf} /><button type="submit"><LogOut size={18} />Cerrar sesión</button></form></div></aside><main className="admin-main premium-main"><div className="mobile-topbar"><LayoutDashboard size={20} /><strong>CMS Moldpack</strong></div>{content}</main></div>;
 }
 
 createInertiaApp({

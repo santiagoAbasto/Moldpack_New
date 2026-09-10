@@ -164,6 +164,7 @@ Las claves completas están documentadas en [`.env.example`](.env.example). Esta
 | `npm run build` | Build de producción en `public/build` |
 | `php artisan test` | Suite completa de tests |
 | `php artisan queue:work --queue=mail,default` | Worker de colas (newsletter y mails) |
+| `php artisan web-intelligence:prune` | Aplica la retención configurada de telemetría, no borra nada si los días están vacíos |
 | `php artisan catalog:import-legacy {dump} --dry-run` | Importa el catálogo desde un respaldo SQL legacy |
 | `php artisan commerce:import-legacy {dump} --dry-run` | Importa clientes, pedidos y facturas legacy |
 | `php artisan commerce:sync-client-details {dump} --dry-run` | Sincroniza datos de perfil de clientes legacy |
@@ -209,6 +210,18 @@ Para reportar una vulnerabilidad, seguí las indicaciones de [`SECURITY.md`](SEC
 7. Mantener un worker: `php artisan queue:work --queue=mail,default --tries=3`
 8. El document root del servidor web debe apuntar a **`public/`**, nunca a la raíz del proyecto.
 9. Configurar el servidor web para **no ejecutar PHP** dentro de `public/storage`.
+
+### Migrar datos locales SQLite a MySQL
+
+El panel en `/dashboard` incluye dos respaldos distintos: **Respaldo local completo** descarga una copia exacta del archivo SQLite local para conservarlo antes de subir el proyecto; **Datos para MySQL** descarga todas las tablas de negocio en SQL compatible con MySQL. El segundo no incluye contraseñas de entorno ni migra la estructura manualmente. En producción el orden correcto es:
+
+1. Crear una base MySQL 8 y completar `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD` en el `.env` del servidor.
+2. Ejecutar `php artisan migrate --force` en el servidor para crear el esquema desde las migraciones versionadas.
+3. Comprobar host, credenciales y tablas sin modificar datos: `php artisan moldpack:mysql:check`.
+4. Descargar el SQL desde `/dashboard` y cargarlo: `mysql --default-character-set=utf8mb4 -h HOST -u USUARIO -p BASE < moldpack-data-AAAA-MM-DD-HHMMSS.sql`.
+5. Ejecutar `php artisan optimize:clear`, `php artisan config:cache` y validar el sitio antes de cambiar DNS o tráfico.
+
+No copies el `.env` local ni el archivo `database.sqlite` al servidor. El exportador omite migraciones, caché y colas pendientes para evitar importar estados operativos obsoletos.
 
 ## Estructura del proyecto
 

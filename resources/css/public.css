@@ -1775,7 +1775,7 @@ body {
     color: rgba(255, 255, 255, .8);
     text-decoration: none;
     font: 400 16px/normal 'PT Sans';
-    margin-bottom: 15px
+    margin-bottom: 10px
 }
 
 .newsletter {
@@ -2994,3 +2994,743 @@ body {
 
 /* IA Moldpack — búsqueda global conectada al CMS */
 .site-search{background:#fff;text-align:left;cursor:pointer}.moldpack-ai[hidden]{display:none}.moldpack-ai{position:fixed;z-index:1200;inset:0;display:grid;place-items:start center;padding:7vh 20px;opacity:0;transition:opacity .18s}.moldpack-ai.open{opacity:1}.moldpack-ai-backdrop{position:absolute;inset:0;border:0;background:rgba(24,10,16,.56);backdrop-filter:blur(8px)}.moldpack-ai-panel{position:relative;width:min(720px,100%);max-height:86vh;overflow:auto;padding:26px;border:1px solid rgba(255,255,255,.4);border-radius:22px;background:rgba(255,255,255,.98);box-shadow:0 32px 100px rgba(39,10,23,.32);transform:translateY(-10px) scale(.98);transition:transform .25s cubic-bezier(.22,1,.36,1);font-family:'Public Sans'}.moldpack-ai.open .moldpack-ai-panel{transform:none}.moldpack-ai-panel>header{display:flex;align-items:center;gap:12px}.moldpack-ai-mark{display:grid;width:44px;height:44px;place-items:center;border-radius:14px;background:linear-gradient(145deg,#ec458b,#5d1c38);color:#fff;font-size:21px;font-weight:700}.moldpack-ai-panel header small{color:#8a6d79;font-size:10px;font-weight:700;letter-spacing:.13em}.moldpack-ai-panel h2{margin:2px 0 0;font-size:22px}.moldpack-ai-panel header>button{margin-left:auto;border:0;background:none;color:#5d1c38;font-size:28px}.moldpack-ai-panel form{display:flex;height:52px;align-items:center;gap:12px;margin-top:24px;padding-left:16px;border:1px solid #dedfe0;border-radius:26px;background:#fff;box-shadow:0 8px 28px rgba(93,28,56,.06)}.moldpack-ai-panel form img{width:22px}.moldpack-ai-panel form input{min-width:0;flex:1;border:0;outline:0;font:400 15px 'Public Sans'}.moldpack-ai-panel form button{height:44px;margin-right:4px;padding:0 24px;border:0;border-radius:22px;background:#5d1c38;color:#fff;font:400 15px 'PT Sans'}.moldpack-ai-answer{margin:18px 4px;color:#5d1c38;font-weight:600}.moldpack-ai-results{display:grid;gap:8px}.moldpack-ai-results a{display:flex;align-items:center;gap:14px;padding:10px;border:1px solid #ece7e9;border-radius:12px;color:#282828;text-decoration:none;transition:.18s}.moldpack-ai-results a:hover{border-color:#ec458b;background:#fff7fa;transform:translateY(-1px)}.moldpack-ai-results img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:#f7f4f5}.moldpack-ai-results span{display:grid;flex:1}.moldpack-ai-results small{color:#ec458b;font-size:10px;font-style:normal;font-weight:700;text-transform:uppercase}.moldpack-ai-results strong{font-size:14px}.moldpack-ai-results em{overflow:hidden;color:#74716a;font-size:12px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.moldpack-ai-results b{color:#5d1c38;font-size:18px}.moldpack-ai-suggestions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.moldpack-ai-suggestions button{padding:8px 12px;border:1px solid #e5dade;border-radius:18px;background:#fff;color:#5d1c38}.moldpack-ai.loading form:after{width:16px;height:16px;margin-right:14px;border:2px solid #eadbe1;border-top-color:#5d1c38;border-radius:50%;animation:spin .7s linear infinite;content:''}.moldpack-ai.loading form button{display:none}@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Responsive: menú móvil (≤1024px) y rango intermedio (1025–1365px) ───
+   Desktop ≥1366px no cambia: todas estas reglas viven por debajo de ese ancho,
+   salvo los elementos móviles, que están ocultos por defecto. */
+.menu-toggle,
+.site-menu-search {
+    display: none
+}
+
+@media(max-width:1024px) {
+    .menu-toggle {
+        display: grid;
+        place-items: center;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        margin-left: 8px;
+        padding: 0;
+        color: #000;
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer
+    }
+
+    .menu-toggle:focus-visible,
+    #site-menu a:focus-visible,
+    #site-menu .site-menu-search:focus-visible {
+        outline: 2px solid var(--wine);
+        outline-offset: 2px
+    }
+
+    .menu-toggle-bars,
+    .menu-toggle-bars::before,
+    .menu-toggle-bars::after {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px
+    }
+
+    .menu-toggle-bars {
+        position: relative;
+        transition: background-color .2s ease
+    }
+
+    .menu-toggle-bars::before,
+    .menu-toggle-bars::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        transition: transform .22s cubic-bezier(.22, 1, .36, 1)
+    }
+
+    .menu-toggle-bars::before {
+        top: -7px
+    }
+
+    .menu-toggle-bars::after {
+        top: 7px
+    }
+
+    .site-header.is-menu-open {
+        z-index: 70
+    }
+
+    .site-header.is-menu-open .menu-toggle-bars {
+        background: transparent
+    }
+
+    .site-header.is-menu-open .menu-toggle-bars::before {
+        transform: translateY(7px) rotate(45deg)
+    }
+
+    .site-header.is-menu-open .menu-toggle-bars::after {
+        transform: translateY(-7px) rotate(-45deg)
+    }
+
+    #site-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        max-height: calc(100vh - 100px);
+        max-height: calc(100dvh - 100px);
+        margin: 0;
+        padding: 4px 20px 12px;
+        overflow-y: auto;
+        background: #fff;
+        border-top: 1px solid var(--line);
+        box-shadow: 0 14px 22px rgba(0, 0, 0, .08);
+        white-space: normal
+    }
+
+    .site-header.is-menu-open #site-menu {
+        display: flex
+    }
+
+    #site-menu a,
+    #site-menu .site-menu-search {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 48px;
+        border-bottom: 1px solid var(--line)
+    }
+
+    #site-menu a:last-child {
+        border-bottom: 0
+    }
+
+    #site-menu .site-menu-search {
+        width: 100%;
+        padding: 0;
+        color: rgba(0, 0, 0, .5);
+        background: transparent;
+        border-width: 0 0 1px;
+        border-style: solid;
+        font: 400 14px/1.5 'Public Sans';
+        text-align: left;
+        cursor: pointer
+    }
+
+    .site-menu-search img {
+        width: 24px;
+        height: 24px
+    }
+}
+
+@media(max-width:620px) {
+    #site-menu {
+        padding-inline: 16px
+    }
+}
+
+/* Etiquetas que pasan a ícono: siguen disponibles para lectores de pantalla. */
+@media(max-width:480px) {
+    .site-header:not([data-private-header]) .client-area span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap
+    }
+
+    .site-header:not([data-private-header]) .client-area {
+        justify-content: center;
+        min-width: 44px;
+        height: 44px
+    }
+}
+
+/* 1025–1326px: el header de escritorio completo necesita 1185px. Se mantiene el
+   menú de escritorio con todos los links; buscador y área clientes pasan a ícono. */
+@media(min-width:1025px) and (max-width:1326px) {
+    .site-header:not([data-private-header]) .site-search {
+        display: flex;
+        justify-content: center;
+        width: 44px;
+        margin-left: 24px;
+        padding: 0
+    }
+
+    .site-header:not([data-private-header]) .site-search span,
+    .site-header:not([data-private-header]) .client-area span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap
+    }
+
+    .site-header:not([data-private-header]) #site-menu {
+        display: flex;
+        gap: 12px;
+        margin-left: auto
+    }
+
+    .site-header:not([data-private-header]) .header-divider {
+        display: inline;
+        margin-left: 16px
+    }
+
+    .site-header:not([data-private-header]) .client-area {
+        margin-left: 16px
+    }
+}
+
+/* Novedades y footer: anchos fijos de desktop que recortaban contenido. */
+@media(max-width:1365px) {
+    .news-card {
+        width: 100%;
+        height: auto
+    }
+
+    .news-media {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 390 / 350
+    }
+
+    .news-card small,
+    .news-card h3,
+    .news-card .excerpt {
+        width: auto;
+        max-width: 100%
+    }
+
+    .footer-content>* {
+        min-width: 0
+    }
+
+    .footer-contact p a {
+        width: auto;
+        min-width: 0
+    }
+
+    /* Mantiene la foto cuadrada del diseño cuando la columna se angosta. */
+    .about-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1
+    }
+}
+
+/* 1101–1365px: misma estructura desktop, columnas fluidas dentro del contenedor. */
+@media(min-width:1101px) and (max-width:1365px) {
+    .category-grid,
+    .news-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    .category-card {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(3, 288px);
+        justify-content: center
+    }
+
+    .about {
+        grid-template-columns: minmax(0, 600px) minmax(0, 520px);
+        gap: 40px
+    }
+
+    .footer-content {
+        column-gap: 32px
+    }
+
+    .footer-contact {
+        margin-left: 0
+    }
+}
+
+/* El campo del newsletter acompaña el ancho de su columna en pantallas angostas. */
+@media(max-width:1024px) {
+    .newsletter {
+        width: 100%;
+        max-width: none
+    }
+}
+
+/* Nosotros: el texto con ancho fijo (602px) forzaba el ancho de la columna. */
+@media(max-width:1365px) {
+    .about-page-rich {
+        width: auto
+    }
+}
+
+/* Nosotros 1101–1365px: misma composición desktop, columnas fluidas. */
+@media(min-width:1101px) and (max-width:1365px) {
+    /* Columnas iguales: a 1365px la foto llega a ~600px y empalma con desktop. */
+    .about-page-story {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .about-page-photo {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1
+    }
+
+    .about-benefits {
+        height: auto;
+        min-height: 422px;
+        padding-bottom: 48px
+    }
+
+    .about-benefit-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    .about-benefit-card {
+        height: auto;
+        min-height: 250px
+    }
+}
+
+/* ─── Productos (listado y detalle) por debajo de 1366px ─── */
+/* Tarjetas fluidas: la grilla decide cuántas columnas entran (mín. 240px). */
+@media(max-width:1365px) {
+    .catalog-grid,
+    .related-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
+    }
+
+    .catalog-product {
+        width: 100%;
+        height: auto;
+        grid-template-rows: auto 58px 65px 46px
+    }
+
+    .catalog-product-media {
+        aspect-ratio: 1
+    }
+
+    .catalog-product-media img {
+        width: 100%;
+        height: 100%
+    }
+}
+
+/* Con el header en flujo (≤1100px) sobraban 100px de relleno y el alto fijo de las migas. */
+@media(max-width:1100px) {
+    .products-catalog,
+    .product-detail {
+        padding-top: 0
+    }
+
+    .product-breadcrumb,
+    .product-detail>.product-breadcrumb {
+        height: auto;
+        padding: 24px 0
+    }
+
+    .product-info {
+        min-height: 0
+    }
+
+    .product-info .product-consult {
+        margin-top: 32px
+    }
+}
+
+/* Listado: filtros arriba en tablet y móvil, a la izquierda desde 1025px. */
+@media(max-width:1024px) {
+    .catalog-layout {
+        display: block
+    }
+
+    .product-filters {
+        width: 100%;
+        margin-bottom: 28px
+    }
+}
+
+@media(min-width:1025px) and (max-width:1365px) {
+    .catalog-layout {
+        grid-template-columns: 240px minmax(0, 1fr)
+    }
+
+    .product-filters {
+        width: 240px
+    }
+}
+
+/* Detalle: galería e información lado a lado con columnas fluidas. */
+@media(min-width:901px) and (max-width:1365px) {
+    .product-hero-detail {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .product-gallery {
+        grid-template-columns: 80px minmax(0, 1fr)
+    }
+
+    .product-main-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1
+    }
+
+    .product-info {
+        min-height: 0
+    }
+
+    .product-info>.product-spec:last-of-type {
+        margin-bottom: 32px
+    }
+
+    .product-info .product-consult {
+        margin-top: auto
+    }
+}
+
+/* Tablet vertical: galería apilada y centrada sobre la información. */
+@media(min-width:701px) and (max-width:900px) {
+    .product-gallery {
+        justify-content: center
+    }
+}
+
+@media(max-width:700px) {
+    .product-consult {
+        width: 100%
+    }
+}
+
+/* ─── Catálogo por debajo de 1366px ─── */
+/* Las tarjetas de descarga llenan su columna en lugar de mantener 288px fijos. */
+@media(max-width:1365px) {
+    .catalog-download-card {
+        width: 100%
+    }
+}
+
+@media(min-width:521px) and (max-width:1365px) {
+    .catalog-download-card {
+        height: auto;
+        min-height: 166px
+    }
+}
+
+/* 1301–1365px: las 4 tarjetas de 288px sobresalían del contenedor. */
+@media(min-width:1301px) and (max-width:1365px) {
+    .catalog-download-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr))
+    }
+}
+
+/* Con el header en flujo (≤1100px) sobraban 100px arriba y el alto fijo del hero. */
+@media(max-width:1100px) {
+    .catalog-page {
+        padding-top: 0
+    }
+
+    .catalog-hero {
+        height: auto;
+        padding-bottom: 72px
+    }
+}
+
+/* Móvil y tablet: el contenedor ya da el margen lateral; no se duplica. */
+@media(max-width:820px) {
+    .catalog-hero {
+        padding-bottom: 0
+    }
+
+    .catalog-breadcrumb {
+        padding-inline: 0
+    }
+
+    .catalog-summary {
+        padding: 0
+    }
+
+    .catalog-categories {
+        padding: 56px 0 80px
+    }
+}
+
+@media(max-width:520px) {
+    .catalog-hero-grid {
+        padding: 40px 0 48px
+    }
+
+    .catalog-download-primary.button {
+        width: 100%;
+        min-width: 0
+    }
+}
+
+/* ─── Novedades (listado) por debajo de 1366px ─── */
+/* Tarjeta, imagen, textos y filtros tenían anchos fijos de desktop (392/390/344px). */
+@media(max-width:1365px) {
+    .news-layout {
+        width: auto
+    }
+
+    .news-page-card {
+        width: 100%;
+        height: auto
+    }
+
+    .news-page-media {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 390 / 350
+    }
+
+    .news-page-copy {
+        height: auto;
+        min-height: 238px
+    }
+
+    .news-page-label,
+    .news-page-copy h1,
+    .news-page-excerpt {
+        width: auto;
+        max-width: 100%
+    }
+
+    .news-search,
+    .news-filter-box {
+        width: 100%
+    }
+
+    .news-filter-box>div button::after {
+        width: 100%;
+        background-size: 100% 1px
+    }
+
+    .news-empty {
+        width: 100%
+    }
+}
+
+@media(min-width:1101px) and (max-width:1365px) {
+    .news-layout {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+}
+
+/* Tablet y móvil: buscador y filtros antes del listado, no al final. */
+@media(max-width:1100px) {
+    .news-sidebar {
+        grid-row: 1;
+        width: 100%
+    }
+}
+
+@media(min-width:621px) and (max-width:1100px) {
+    .news-sidebar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 24px
+    }
+
+    .news-search {
+        grid-column: 1 / -1
+    }
+}
+
+@media(max-width:620px) {
+    .news-layout {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    .news-sidebar {
+        gap: 16px
+    }
+}
+
+/* ─── Novedades (detalle) por debajo de 1366px ─── */
+/* Encabezado, imagen, galería y relacionados tenían anchos fijos de desktop. */
+@media(max-width:1365px) {
+    .news-detail-shell {
+        width: auto
+    }
+
+    .news-detail-heading {
+        width: auto;
+        max-width: 808px
+    }
+
+    .news-detail-heading div {
+        width: auto;
+        max-width: 704px
+    }
+
+    .news-detail-media {
+        width: 100%;
+        min-height: 0
+    }
+
+    .news-detail-media img,
+    .news-detail-media video,
+    .news-detail-media iframe {
+        height: auto;
+        aspect-ratio: 808 / 520
+    }
+
+    .news-detail-gallery,
+    .news-detail-related-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    .news-detail-gallery figure {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 392 / 260
+    }
+}
+
+/* 1101–1365px: imagen y texto lado a lado en la misma proporción de desktop. */
+@media(min-width:1101px) and (max-width:1365px) {
+    .news-detail-hero {
+        grid-template-columns: minmax(0, 808fr) minmax(0, 344fr);
+        column-gap: 48px
+    }
+}
+
+/* Tablet y móvil: imagen arriba y texto debajo. */
+@media(max-width:1100px) {
+    .news-detail-heading h1 {
+        font-size: clamp(30px, 8vw, 48px)
+    }
+
+    .news-detail-hero {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px
+    }
+
+    /* Apilada, la imagen no supera su ancho de desktop. */
+    .news-detail-media {
+        max-width: 808px
+    }
+
+    .news-detail-body {
+        max-width: 704px
+    }
+
+    .news-detail-gallery,
+    .news-detail-related-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+@media(max-width:620px) {
+    .news-detail-page {
+        padding-bottom: 64px
+    }
+
+    .news-detail-heading {
+        margin-bottom: 24px
+    }
+
+    .news-detail-heading div {
+        font-size: 18px
+    }
+
+    .news-detail-gallery {
+        margin-top: 40px
+    }
+
+    .news-detail-gallery,
+    .news-detail-related-grid {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    .news-detail-related {
+        margin-top: 56px
+    }
+
+    .news-detail-related-head {
+        flex-wrap: wrap;
+        gap: 16px
+    }
+
+    .news-detail-back.button {
+        width: 100%
+    }
+}
+
+/* ─── Calidad y Contacto 1101–1365px: columnas fijas de desktop que no entraban ─── */
+@media(min-width:1101px) and (max-width:1365px) {
+    .quality-main {
+        grid-template-columns: minmax(0, 584fr) minmax(0, 601fr)
+    }
+
+    .quality-photo {
+        width: 100%
+    }
+
+    .contact-layout {
+        grid-template-columns: minmax(0, 374fr) minmax(0, 808fr)
+    }
+
+    .contact-intro,
+    .contact-lead {
+        width: auto
+    }
+
+    .contact-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+/* Contacto con el header en flujo: migas compactas como en el resto del sitio. */
+@media(max-width:1100px) {
+    .contact-breadcrumb {
+        height: auto;
+        padding: 24px 0
+    }
+}
+
+/* ─── Modal de acceso de clientes: siempre centrado y alcanzable ─── */
+/* En pantallas bajas (celular horizontal) la tarjeta superaba el alto visible. */
+.client-login-card {
+    min-height: min(469px, calc(100vh - 32px));
+    min-height: min(469px, calc(100dvh - 32px));
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain
+}
+
+@media(max-width:520px) {
+    .client-login-layer {
+        padding: 16px
+    }
+}
+
+/* Encabezado de sección con botón y pie de copyright en pantallas angostas. */
+@media(max-width:1024px) {
+    .section-head {
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px 24px
+    }
+
+    .site-footer .footer-bottom {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center
+    }
+
+    .site-footer .footer-bottom span {
+        margin-top: 0
+    }
+}

@@ -123,6 +123,16 @@
 <script>
 (()=>{const layer=document.querySelector('#client-login');if(!layer)return;const card=layer.querySelector('.client-login-card');const open=()=>{layer.hidden=false;document.body.classList.add('modal-open');requestAnimationFrame(()=>layer.classList.add('is-open'));setTimeout(()=>card.querySelector('input')?.focus(),160)};const close=()=>{layer.classList.remove('is-open');document.body.classList.remove('modal-open');setTimeout(()=>layer.hidden=true,180)};document.querySelector('.client-area-trigger')?.addEventListener('click',open);layer.querySelector('.client-login-backdrop')?.addEventListener('click',close);layer.querySelector('.client-login-close')?.addEventListener('click',close);layer.querySelector('.client-register-link')?.addEventListener('click',()=>{const form=layer.querySelector('.client-register-form');form.hidden=!form.hidden;card.classList.toggle('registering',!form.hidden)});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!layer.hidden)close()});@if($errors->has('username')) open(); @endif})();
 (()=>{const toast=document.querySelector('[data-site-toast]');if(!toast)return;let timer;const dismiss=()=>{window.clearTimeout(timer);toast.classList.remove('is-visible');toast.classList.add('is-leaving');window.setTimeout(()=>toast.closest('.site-toast-region')?.remove(),240)};requestAnimationFrame(()=>requestAnimationFrame(()=>toast.classList.add('is-visible')));timer=window.setTimeout(dismiss,5600);toast.querySelector('.site-toast-close')?.addEventListener('click',dismiss);toast.addEventListener('mouseenter',()=>window.clearTimeout(timer));toast.addEventListener('mouseleave',()=>{timer=window.setTimeout(dismiss,1800)});})();
+(()=>{
+  const header=document.querySelector('.site-header'),toggle=header?.querySelector('[data-menu-toggle]'),menu=document.getElementById('site-menu');if(!toggle||!menu)return;
+  const isOpen=()=>header.classList.contains('is-menu-open');
+  const set=open=>{header.classList.toggle('is-menu-open',open);toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú')};
+  toggle.addEventListener('click',()=>{const open=!isOpen();set(open);if(open)menu.querySelector('a,button')?.focus()});
+  menu.addEventListener('click',event=>{if(isOpen()&&event.target.closest('a,button'))set(false)});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&isOpen()){set(false);toggle.focus()}});
+  document.addEventListener('click',event=>{if(isOpen()&&!header.contains(event.target))set(false)});
+  window.matchMedia('(max-width:1024px)').addEventListener('change',()=>set(false));
+})();
 (()=>{document.querySelectorAll('.contact-form,.newsletter-form').forEach(form=>form.addEventListener('submit',()=>{const button=form.querySelector('button[type="submit"]');if(!button)return;button.disabled=true;button.setAttribute('aria-busy','true');form.classList.add('is-submitting');const label=button.querySelector('.button-label');if(label)label.textContent='Enviando…';}));})();
 (()=>{
   const layer=document.querySelector('#moldpack-ai');if(!layer)return;
@@ -145,7 +155,7 @@
     finally{if(request===sequence)layer.classList.remove('loading')}
   };
   const schedule=()=>{clearTimeout(timer);const q=input.value.trim();if(q.length<2){reset();return}timer=setTimeout(()=>search(q),280)};
-  document.querySelector('[data-ai-open]')?.addEventListener('click',open);layer.querySelectorAll('[data-ai-close]').forEach(button=>button.addEventListener('click',close));
+  document.querySelectorAll('[data-ai-open]').forEach(button=>button.addEventListener('click',open));layer.querySelectorAll('[data-ai-close]').forEach(button=>button.addEventListener('click',close));
   form.addEventListener('submit',event=>{event.preventDefault();clearTimeout(timer);search(input.value)});input.addEventListener('input',schedule);
   layer.querySelectorAll('[data-ai-query]').forEach(button=>button.addEventListener('click',()=>search(button.dataset.aiQuery)));document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!layer.hidden)close()});
 })();

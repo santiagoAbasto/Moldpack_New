@@ -42,18 +42,27 @@ class ContactInquiryController extends Controller
 
         unset($data['website']);
         $inquiry = ContactInquiry::create($data);
-        try {
-            Mail::to(config('mail.contact_to'))->queue(new ContactInquiryReceived($inquiry));
-            $confirmationKey = 'contact-confirmation:'.hash('sha256', mb_strtolower($inquiry->email));
-            if (! RateLimiter::tooManyAttempts($confirmationKey, self::CONFIRMATIONS_PER_ADDRESS)) {
-                RateLimiter::hit($confirmationKey, 3600);
-                Mail::to($inquiry->email)->queue(new ContactInquiryConfirmation($inquiry));
-            }
-        } catch (\Throwable $exception) {
-            report($exception);
+
+        // The inquiry is already saved and visible in the admin; mail is a
+        // notification only, so a mail failure must never fail the request.
+        $this->sendSafely(fn () => Mail::to(config('mail.contact_to'))->queue(new ContactInquiryReceived($inquiry)));
+
+        $confirmationKey = 'contact-confirmation:'.hash('sha256', mb_strtolower($inquiry->email));
+        if (! RateLimiter::tooManyAttempts($confirmationKey, self::CONFIRMATIONS_PER_ADDRESS)) {
+            RateLimiter::hit($confirmationKey, 3600);
+            $this->sendSafely(fn () => Mail::to($inquiry->email)->queue(new ContactInquiryConfirmation($inquiry)));
         }
 
         return back()->with('contact_success', self::SUCCESS);
+    }
+
+    private function sendSafely(\Closure $send): void
+    {
+        try {
+            $send();
+        } catch (\Throwable $exception) {
+            Log::error('No se pudo enviar un correo del formulario de contacto.', ['error' => $exception->getMessage()]);
+        }
     }
 
     /**

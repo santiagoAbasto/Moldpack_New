@@ -9,6 +9,7 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\Admin\NewsletterController as AdminNewsletterController;
 use App\Http\Controllers\Admin\SocialLinkController;
+use App\Http\Controllers\Admin\DatabaseExportController;
 use App\Http\Controllers\MoldpackAiController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,11 +34,15 @@ Route::middleware('client')->group(function (): void {
     Route::delete('/area-clientes/carrito/{product}', [ClientAreaController::class, 'removeFromCart'])->name('client.cart.remove');
     Route::patch('/area-clientes/carrito/{product}', [ClientAreaController::class, 'updateCart'])->name('client.cart.update');
     Route::post('/area-clientes/pedidos', [ClientAreaController::class, 'checkout'])->name('client.checkout');
+    Route::post('/area-clientes/pedidos/{order}/recomprar', [ClientAreaController::class, 'reorder'])->name('client.orders.reorder');
     Route::post('/area-clientes/pagos', [ClientAreaController::class, 'reportPayment'])->name('client.payments.store');
+    Route::get('/area-clientes/pagos/{payment}/comprobante', [ClientAreaController::class, 'downloadPaymentReceipt'])->name('client.payments.receipt');
     Route::get('/area-clientes/facturas/{invoice}/descargar', [ClientAreaController::class, 'downloadInvoice'])->name('client.invoices.download');
 });
 Route::redirect('/login', '/admin/login', 301);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
+
+Route::get('/dashboard', [AdminController::class, 'index'])->middleware(['auth', 'auth.session', 'admin'])->name('admin.dashboard');
 
 Route::prefix('admin')->group(function (): void {
     Route::middleware('guest')->group(function (): void {
@@ -48,7 +53,9 @@ Route::prefix('admin')->group(function (): void {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('admin.logout');
 
     Route::middleware(['auth', 'auth.session', 'admin'])->group(function (): void {
-        Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/', [AdminController::class, 'index'])->name('admin.cms');
+        Route::get('/database/export/mysql', [DatabaseExportController::class, 'mysql'])->name('admin.database.export.mysql');
+        Route::get('/database/export/sqlite', [DatabaseExportController::class, 'sqlite'])->name('admin.database.export.sqlite');
         Route::put('/pages/{page}', [AdminController::class, 'savePage']);
         Route::post('/pages/{page}/sections', [AdminController::class, 'createSection']);
         Route::put('/sections/{section}', [AdminController::class, 'saveSection']);

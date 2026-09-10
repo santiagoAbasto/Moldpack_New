@@ -86,3 +86,8 @@ Homestead.yaml
 docker-compose.override.yml
 /login-redesign-check.png
 /resources/views/admin.blade 2.php
+
+# ─── Artefactos locales de automatización / QA ────────────────
+/.claude/
+/tmp/
+/output/

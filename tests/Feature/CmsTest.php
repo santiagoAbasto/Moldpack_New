@@ -32,6 +32,21 @@ class CmsTest extends TestCase
             ->assertSeeInOrder(['Categorías', 'Productos', 'Nosotros', 'Novedades', 'Catálogo de productos']);
     }
 
+    public function test_home_placeholder_links_are_wired_to_public_destinations(): void
+    {
+        $this->seed();
+
+        $response = $this->get('/')->assertOk();
+        $html = $response->getContent();
+
+        $this->assertStringNotContainsString('href="#', $html);
+        $this->assertStringContainsString('href="'.route('public.page', ['slug' => 'productos']).'"', $html);
+        $this->assertStringContainsString(route('public.page', ['slug' => 'productos']).'?categoria=', $html);
+        $this->assertStringContainsString('href="'.route('public.page', ['slug' => 'nosotros']).'"', $html);
+        $this->assertStringContainsString('href="'.route('public.page', ['slug' => 'novedades']).'"', $html);
+        $this->assertStringContainsString('href="'.route('public.page', ['slug' => 'catalogo']).'"', $html);
+    }
+
     public function test_admin_is_protected_by_admin_login_route(): void
     {
         $this->get('/admin')->assertRedirect('/admin/login');
@@ -77,11 +92,17 @@ class CmsTest extends TestCase
         $this->post('/admin/login', [
             'email' => $user->email,
             'password' => 'Cambiar123!',
-        ])->assertRedirect('/admin');
+        ])->assertRedirect('/dashboard');
 
         $this->assertAuthenticatedAs($user);
         $this->get('/admin')->assertOk()->assertInertia(
             fn (Assert $page) => $page->component('Admin/Cms', false)->has('pages', 9),
+        );
+
+        $this->get('/dashboard')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Admin/Cms', false)
+                ->where('initialModule', 'intelligence')
+                ->has('intelligence.metrics'),
         );
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\MailFallback;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+        MailFallback::apply();
         RateLimiter::for('admin-login', fn (Request $request) => [
             Limit::perMinute(20)->by($request->ip()),
         ]);

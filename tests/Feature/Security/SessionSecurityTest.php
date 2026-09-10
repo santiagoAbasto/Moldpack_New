@@ -40,7 +40,7 @@ class SessionSecurityTest extends TestCase
         $this->get('/admin/login');
         $before = session()->getId();
 
-        $this->post('/admin/login', ['email' => 'sec-admin@example.com', 'password' => 'Password-Segura-1'])->assertRedirect('/admin');
+        $this->post('/admin/login', ['email' => 'sec-admin@example.com', 'password' => 'Password-Segura-1'])->assertRedirect('/dashboard');
         $this->assertNotSame($before, session()->getId());
     }
 

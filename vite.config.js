@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [
     laravel({
-      input: ['resources/css/public.css', 'resources/css/client-shell.css', 'resources/css/client-products.css', 'resources/css/client-cart.css', 'resources/css/admin.css', 'resources/css/login.css', 'resources/js/admin.jsx', 'resources/js/stores-map.js'],
+      input: ['resources/css/public.css', 'resources/css/client-shell.css', 'resources/css/client-products.css', 'resources/css/client-cart.css', 'resources/css/client-orders.css', 'resources/css/client-payments.css', 'resources/css/client-account.css', 'resources/css/client-invoices.css', 'resources/css/admin.css', 'resources/css/login.css', 'resources/js/admin.jsx', 'resources/js/stores-map.js'],
       refresh: true,
     }),
     react(),

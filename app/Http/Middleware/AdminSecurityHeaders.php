@@ -12,7 +12,7 @@ class AdminSecurityHeaders
     {
         $response = $next($request);
 
-        if (! $request->is('admin*')) {
+        if (! $request->is('admin*') && ! $request->is('dashboard')) {
             return $response;
         }
 

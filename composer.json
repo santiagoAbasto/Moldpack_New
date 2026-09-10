@@ -6,6 +6,7 @@
   "description": "CMS editorial de Moldpack sobre Laravel 13",
   "require": {
     "php": "^8.5",
+    "barryvdh/laravel-dompdf": "^3.1",
     "inertiajs/inertia-laravel": "^3.3",
     "laravel/framework": "^13.0",
     "laravel/tinker": "^3.0"

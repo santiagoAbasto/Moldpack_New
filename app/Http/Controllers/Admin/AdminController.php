@@ -18,6 +18,7 @@ use App\Models\NewsletterSubscriber;
 use App\Models\NewsletterCampaign;
 use App\Services\ProductRelationService;
 use App\Services\ProductTaxonomyService;
+use App\Services\WebIntelligenceService;
 use App\Support\SafeSvg;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,9 +37,10 @@ class AdminController extends Controller
     public function __construct(
         private readonly ProductRelationService $relations,
         private readonly ProductTaxonomyService $taxonomy,
+        private readonly WebIntelligenceService $intelligence,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $pages = Page::with(['sections.items.media', 'sections.media'])->orderBy('id')->get();
         $catalog = $pages->firstWhere('slug', 'productos')?->sections
@@ -84,6 +86,8 @@ class AdminController extends Controller
                 'totals' => ['clients'=>Cliente::count(),'orders'=>ClientOrder::count(),'invoices'=>ClientInvoice::count()],
                 'products' => $catalog->map(fn (ContentItem $product) => ['id'=>$product->id,'name'=>$product->title,'sku'=>data_get($product->settings,'code'),'stock'=>(int) data_get($product->settings,'stock',0),'price'=>(float) data_get($product->settings,'price',0)]),
             ],
+            'initialModule' => $request->routeIs('admin.dashboard') ? 'intelligence' : 'home_hero',
+            'intelligence' => $request->routeIs('admin.dashboard') ? $this->intelligence->dashboard((string) $request->query('range', '7d')) : null,
         ]);
     }
 
@@ -299,9 +303,21 @@ class AdminController extends Controller
 
     public function saveSetting(Request $request, string $key): RedirectResponse
     {
-        $allowed = ['quality', 'stores', 'contact', 'newsletter', 'social'];
+        $allowed = ['quality', 'stores', 'contact', 'newsletter', 'social', 'whatsapp'];
         abort_unless(in_array($key, $allowed, true), 404);
         $value = $request->validate(['value' => ['required', 'array']])['value'];
+        if ($key === 'whatsapp') {
+            // Stored inside the contact setting: the floating button and footer already read contact.whatsapp.
+            $number = preg_replace('/\D+/', '', (string) ($value['number'] ?? ''));
+            validator(['number' => $number], ['number' => ['required', 'digits_between:8,15']], [
+                'number.required' => 'Ingresá el número de WhatsApp.',
+                'number.digits_between' => 'El número debe tener entre 8 y 15 dígitos, con código de país (ej. 54 9 11 4727 2836).',
+            ])->validate();
+            $contact = SiteSetting::where('key', 'contact')->value('value') ?? [];
+            SiteSetting::updateOrCreate(['key' => 'contact'], ['value' => array_merge($contact, ['whatsapp' => $number])]);
+
+            return back()->with('success', 'Número de WhatsApp actualizado en el sitio.');
+        }
         if ($key === 'contact') {
             $value = validator($value, [
                 'intro' => ['required', 'string', 'max:500'],

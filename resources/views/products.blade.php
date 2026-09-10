@@ -25,4 +25,50 @@
   </div>
 </main>
 @endsection
-@push('scripts')<script>(()=>{const cards=[...document.querySelectorAll('.catalog-product')];const controls=[...document.querySelectorAll('[data-category-filter],[data-family-filter]')];document.querySelectorAll('.filter-family>button').forEach(button=>button.addEventListener('click',()=>{const group=button.parentElement;group.classList.toggle('open');button.setAttribute('aria-expanded',group.classList.contains('open'))}));controls.forEach(button=>button.addEventListener('click',()=>{controls.forEach(control=>control.classList.remove('active'));button.classList.add('active');const category=(button.dataset.categoryFilter||'').trim().toLocaleLowerCase('es');const family=(button.dataset.familyFilter||'').trim().toLocaleLowerCase('es');cards.forEach(card=>{const matchesCategory=!category||card.dataset.category.trim().toLocaleLowerCase('es')===category;const matchesFamily=!family||card.dataset.family.trim().toLocaleLowerCase('es')===family;card.hidden=!(matchesCategory&&matchesFamily)})}))})();</script>@endpush
+@push('scripts')
+<script>
+(() => {
+  if (window.matchMedia('(max-width:1024px)').matches) {
+    document.querySelectorAll('.filter-family.open').forEach(group => {
+      group.classList.remove('open');
+      group.querySelector('button')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+})();
+
+(() => {
+  const cards = [...document.querySelectorAll('.catalog-product')];
+  const controls = [...document.querySelectorAll('[data-category-filter],[data-family-filter]')];
+  const normalize = value => (value || '').trim().toLocaleLowerCase('es');
+
+  document.querySelectorAll('.filter-family > button').forEach(button => button.addEventListener('click', () => {
+    const group = button.parentElement;
+    group.classList.toggle('open');
+    button.setAttribute('aria-expanded', group.classList.contains('open'));
+  }));
+
+  controls.forEach(button => button.addEventListener('click', () => {
+    controls.forEach(control => control.classList.remove('active'));
+    button.classList.add('active');
+    const category = normalize(button.dataset.categoryFilter);
+    const family = normalize(button.dataset.familyFilter);
+    cards.forEach(card => {
+      const matchesCategory = !category || normalize(card.dataset.category) === category;
+      const matchesFamily = !family || normalize(card.dataset.family) === family;
+      card.hidden = !(matchesCategory && matchesFamily);
+    });
+  }));
+
+  const requestedCategory = normalize(new URLSearchParams(window.location.search).get('categoria'));
+  if (requestedCategory) {
+    const control = controls.find(button => normalize(button.dataset.categoryFilter) === requestedCategory);
+    if (control) {
+      control.closest('.filter-family')?.classList.add('open');
+      control.closest('.filter-family')?.querySelector(':scope > button')?.setAttribute('aria-expanded', 'true');
+      control.click();
+      control.scrollIntoView({ block: 'nearest' });
+    }
+  }
+})();
+</script>
+@endpush
